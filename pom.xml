@@ -86,6 +86,10 @@
                 <version>9.0.0.RC2</version>
                 <configuration>
                     <scanIntervalSeconds>10</scanIntervalSeconds>
+                    <webApp>
+                        <contextPath>/threads</contextPath>
+                    </webApp>
+                    <jettyXml>src/main/webapp/WEB-INF/jetty.xml</jettyXml>
                 </configuration>
             </plugin>
         </plugins>

@@ -8,34 +8,25 @@ import org.apache.http.impl.nio.conn.PoolingClientAsyncConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.client.HttpAsyncClient;
 import org.apache.http.nio.reactor.IOReactorException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = "/*", asyncSupported = true)
-public class ThreadsServlet extends HttpServlet {
-    private static final String CONTENT_TYPE = "text/plain";
+@WebServlet(urlPatterns = "/async", asyncSupported = true)
+public class AsyncServlet extends AbstractServlet {
 
     private static final long serialVersionUID = 7770323867448369047L;
-    public static final String MAX = "max";
 
     private HttpAsyncClient client;
 
-    private final Logger logger = LoggerFactory.getLogger(ThreadsServlet.class);
-
-    @SuppressWarnings("deprecation")
     @Override
     public void init() throws ServletException {
-        super.init();
         try {
             PoolingClientAsyncConnectionManager connectionManager = new PoolingClientAsyncConnectionManager(new DefaultConnectingIOReactor());
             connectionManager.setDefaultMaxPerRoute(0xFFFF);
@@ -66,38 +57,18 @@ public class ThreadsServlet extends HttpServlet {
             return;
         }
 
-        logger.info("Servlet no. {} called.", number);
+        log("Servlet no. {} called.", number);
         try {
             callServer(number, req, resp);
-            logger.info("Servlet no. {} returning.", number);
+            log("Servlet no. {} returning.", number);
         } catch (Throwable e) {
             logger.error("Reached {} of connections", number, e);
             resp.getWriter().write("Reached " + number + " of connections.");
         }
     }
 
-    private int getMax(HttpServletRequest req) {
-        if (req.getParameter(MAX) != null) {
-            return Integer.valueOf(req.getParameter(MAX));
-        } else {
-            return 5000;
-        }
-    }
-
-
-    private int getCurrentNumber(HttpServletRequest req) {
-        int number;
-        String header = req.getHeader("number");
-        if (header != null) {
-            number = Integer.valueOf(header);
-        } else {
-            number = 1;
-        }
-        return number;
-    }
-
     private void callServer(final int number, HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        HttpGet get = new HttpGet("http://localhost:8080/" + req.getServletContext().getContextPath() + "/async/req?max=" + getMax(req));
+        HttpGet get = new HttpGet("http://localhost:8080/" + req.getServletContext().getContextPath() + "/async?max=" + getMax(req));
         get.addHeader("number", Integer.toString(number + 1));
         final AsyncContext asyncContext = req.startAsync(req, resp);
         asyncContext.setTimeout(600_000);
@@ -108,11 +79,8 @@ public class ThreadsServlet extends HttpServlet {
                     ServletResponse response = asyncContext.getResponse();
                     response.setContentType(CONTENT_TYPE);
                     final ServletOutputStream outputStream = response.getOutputStream();
-                    outputStream.print("OK ");
-                    outputStream.print(number);
-                    outputStream.print("\n");
                     result.getEntity().writeTo(outputStream);
-                    logger.info("Servlet no. {} processed {}.", number, asyncContext);
+                    log("Servlet no. {} processed.", number);
                     asyncContext.complete();
                 } catch (Exception e) {
                     logger.error("IOException {}:", asyncContext, e);
