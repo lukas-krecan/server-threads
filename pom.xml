@@ -92,6 +92,14 @@
                     <jettyXml>src/main/webapp/WEB-INF/jetty.xml</jettyXml>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <path>/threads</path>
+                </configuration>
+            </plugin>
         </plugins>
         <finalName>threads</finalName>
     </build>
