@@ -10,3 +10,5 @@ Experiment with Java Servlet threads and async servlets. It is possible to start
  To configure Maven memory usage, use MAVEN_OPTS, for example `MAVEN_OPTS='-Xmx2048m -Xms2048m'`.
 
  Otherwise feel free to create WAR using `mvn package` and deploy it to a server of your choice.
+
+ For higher number of connections you have to play with the server configuration and operation system ulimits. Sample jetty configuration is [included](https://github.com/lukas-krecan/server-threads/blob/master/src/main/webapp/WEB-INF/jetty.xml).
